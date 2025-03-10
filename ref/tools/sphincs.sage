@@ -1,6 +1,6 @@
 # Set variables in the following three lines
-tsec        = 256    # Pr[one attacker hash call works] <= 1/2^tsec
-maxsigs     = 2^8   # at most 2^72
+tsec        = 128    # Pr[one attacker hash call works] <= 1/2^tsec
+maxsigs     = 2^10   # at most 2^72
 maxsigbytes = 30000  # Don't print parameters if signature size is larger
 #### Don't edit below this line ####
 
@@ -67,9 +67,23 @@ for h in range(s-8,s+20):                                             # Iterate 
                         wots = wotschains(8*hashbytes,w)
                         sigsize = ((b+1)*k+h+wots*d+1)*hashbytes
                         speed   = k*2^(b+1) + d*(2^(h/d)*(wots*w+1))  # Rough speed estimate based on #hashes
+                        keygen_hashes = 2^(h/d) * (wots * w + wots + 2) - 1
+                        sign_hashes = d * (2^(h/d) * (wots * w + wots + 2) -1 ) + k * (3*2^b - 1)
                         if sigsize < maxsigbytes and -sec < 2*tsec:
-                           # print(h,d,b,k,w,sec,sigsize,speed)                          # SPHINCS+ parameters
-                           print("\t".join(map(str, (sigsize, speed, 0, sec, h,d,b,k,w, 0))))
-                           # print(sec)                                # FORS forgery probability
-                           # print(sigsize)                            # Sig size in bytes
-                           # print(speed)                               # Signing speed estimate (based on #hashes)
+                           # Output scheme. 
+                           # Fields are:
+                           # - Signature Size
+                           # - Estimated speed based on #hashes
+                           # - #Hashes during Verification (omitted)
+                           # - generic bit security for quantum algorithms
+                           # - Height of hyptertree
+                           # - Layers in hypertree
+                           # - Height of FORS tree
+                           # - Number of FORS trees per hyptertree leaf
+                           # - Winternitz parameter
+                           # - Security degredation parameter (omitted)
+                           # - Number of hash function calls for keygen
+                           # - Number of hash function calls for signing
+                           # The ommitted values are set to 0, but are included anyways to keep 
+                           # compatibility to the format used in https://eprint.iacr.org/2022/1725
+                           print("\t".join(map(str, (sigsize, speed, 0, sec, h,d,b,k,w, 0, keygen_hashes, sign_hashes))))
